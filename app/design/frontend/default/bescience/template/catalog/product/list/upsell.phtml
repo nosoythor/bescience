@@ -1,0 +1,316 @@
+<?php
+/**
+ *   PengoStores
+ * 
+ *   MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM8=~==~~~===7MMMMMMMMMMMMMMMMM
+ *   MMMMMMMMMMMMMMMMMMMMMMMMMMO~~~~~~~~~~~~~~~~~~~MMMMMMMMMMMMMM
+ *   MMMMMMMMMMMMMMMMMMMMMM=~=~~~~~~~~~~~~~~~~~~~~~~~MMMMMMMMMMMM
+ *   MMMMMMMMMMMMMMMMM8==~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~MMMMMMMMMM
+ *   MMMMMMMMMMMMMM~~~~~~~~~~~~~~~~~~~~~~~~~~~~~=MMMMMM~MMMMMMMMM
+ *   MMMMMMMMMMM~~~~~~~~~~~~~~~~~~~~~~~~~===MMMMMMMM=~~~~MMMMMMMM
+ *   MMMMMMMMM=~~~~~~~~~~~~~~~~=~+7MMMMMMMMMMM$?M+=~~~~~~=MMMMMMM
+ *   MMMMMMM?~~~~~~~~~~=MMMMMMMMMMMMMMMMMM???MD~~~~~~~~~~~=MMMMMM
+ *   MMMMMM=~~~~~~~~~=MMMMMMMMMMMMMMMMM???IMM=~~~~~~~~~~~~~MMMMNM
+ *   MMMMM=~~~~~~~~~7MMMMMMMMMM,.?MMM??OMMM=~~~~~~~~~~~~~~~+MMMMM
+ *   MMMMZ~~~~~~~~~MMMMMMMMMMMMMMMMMMMMMMM~~~~~~~~~~~~~~~~~~MMMMM
+ *   MMMM~~~~~~~~~MMMMMMMMMMMMMMMMMMMMMMM~~~~~~~~~~~~~~~~~~~MMMMM
+ *   MMMM~~~~~~~=MMMMMMMMMMMMMMMMMMMMMMM~=~~~~~~~~~~~~~~~~~~MMMMM
+ *   MMM8~~~~~~~NMMMM++MMMMMMMMMMMMMMMM=~~~~~~~~~~~~~~~~~~~~7MMMM
+ *   MMM7~~~~~~~MMM++++=MMMMMMMMMMMMMM=~~~~~~~~~~~~~~~~~~~~~?MMMM
+ *   MMMZ~~~~~=MMM?+++==MMMMMMMMMMMMMM~~~~~~~~~~~~~~~~~~~~~~?MMMM
+ *   MMMM~~~~~~MM??++====MMMMMMMMMMMMM~~~~~~~~~~~~~~~~~~~~~~$MMMM
+ *   MMMM~~~~~MM?+++===~~~MMMMMMMMMMMMM~=~~~~~~~~~~~~~~~~~~~MMMMM
+ *   MMMM+~~~~MM?+~.....:~:8MMMMM~...OMM~~~~~~~~~~~~~~~~~~~~MMMMM
+ *   DMMMM=~~~M=....... DMN   . ......MMM=~~~~~~~~~~~~~~~~~~MMMMM
+ *   MMMMMM~~=MM.....MMMMMMMMN ........MM=~~~~~~~~~~~~~~~~~$MMMMM
+ *   MMMMMM7~~MMM...MMMMMMMMMMM~ . . . .MM~~~~~~~~~~~~~~~~=MMMMMM
+ *   MMMMMMM7~MMMMMMMMMMMMMMMMMMM. . .   MM=~~~~~~~~~~~~=~MMMMMMM
+ *   MMMMMMMMOMMMMMMMMMMMMMMMMMMMM . .   .MM~~~~~~~~~~~~7MMMMMMMM
+ *   MMMMMMMMMMMMMMMMMMMMMMMMMMMMM=.......,MM~~~~~~~~~=MMMMMMMMMM
+ *   MMMMMMMMMMMMMMMMMMMMMMMMMMMMMM. .    .,MM=~~~~=MMMMMMMMMMMMM
+ *   MMMMMMMMMMMMMMMMMMMMMMMMMMMMMM. .   ...MMM=~=MMMMMMMMMMMMMMM
+ *   MMMMMMMMMMMMMMMMMMMMMMMMMMMMMM..........MMMMMMMMMMMMMMMMMMMM
+ *   MMMMMMMMMMMMMMMMMMMMMMMMMMMMMM.........IMMMMMMMMMMMMMMMMMMMM
+ *   MMMMMMMMMMMMMMMMMMMMMMMMMMMMM.......MMMMMMMMMMMMMMMMMMMMMMMM
+ *   MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+ * 
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the PengoStores License
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://www.pengostores.com/license/
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@pengostores.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Edit or add to this file under your own risk.
+ * PengoStores will not provide  support to any developed extension
+ * which has been modified after its official release.
+ *
+ * @author Huetzin Sotelo <huetzin@pengostores.com>  & Adrian Romero <adrian@pengostores.com>
+ *   Pengo_Aditional Custom Attributes 
+ * @category Pengo_Catalog_Product_View
+ * @license  http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ * 
+ * This template show aditional product data, as data sheet, configurations
+ * 
+ */
+?>
+<?php $_prod    = $this->getProduct() ?>
+<?php $_product = $this->getProduct(); ?>
+<?php
+      $hemogardDisplay        = false;
+      $convensionalDisplay    = false;
+      $colorDisplay    = false;
+      $texturaDisplay = false;
+      $hemogard = null;
+      $convencional = null;
+      $color = NULL;
+      $textura = NULL;
+      $eavConfig = Mage::getModel('eav/config');
+      $attributes = $eavConfig->getEntityAttributeCodes(Mage_Catalog_Model_Product::ENTITY, $_product);
+      if (in_array('hemogard',$attributes)) {
+            $hemogardDisplay = TRUE;
+            $hemogard = $_product->getAttributeText('hemogard');
+      }
+      if (in_array('convencional',$attributes)) {
+            $convensionalDisplay = TRUE;
+            $convencional = $_product->getAttributeText('convencional');
+      }
+      if (in_array('color',$attributes)) {
+            $colorDisplay = TRUE;
+            $color = $_product->getAttributeText('color');
+      }
+      if (in_array('textura',$attributes)) {
+            $texturaDisplay = TRUE;
+            $textura = $_product->getAttributeText('textura');
+      }
+?>
+<?php $atributos = $_prod->getAttributes()?>
+<?php //$id       = $_prod->getAttributeSetId()?>
+<?php //$set      = Mage::getModel('eav/entity_attribute_set')->load($id) ?>
+<?php //$setName  = $set->getAttributeSetName(); ?>
+<?php //$setId    = $set->getAttributeSetId(); ?>
+<?php $attributesCollection = Mage::getResourceModel('catalog/product_attribute_collection'); ?>
+<?php $qtyStock = Mage::getModel('cataloginventory/stock_item'); ?>
+<?php $product = Mage::getModel('catalog/product') ?>
+<?php $attrib    = Array(); ?>
+<?php $numAttrib=0;?>
+<?php $limitDropDown=$_prod->getLimiteCantidad();?>
+<?php //$group    = Mage::getResourceModel('eav/entity_attribute_group_collection')->addFieldToSelect('attribute_group_id')->addFieldToFilter('attribute_set_id', array('eq'=>$setId)) ?>
+<?php //foreach(Mage::getModel('eav/entity_attribute_set')->getCollection() as $att): ?>
+<?php //$atributos = $_prod->getResource()->getAttribute() ?>
+
+<?php 
+//foreach ($atributos as $value){
+//   $val =  $value->getFrontend()->getValue($_prod);
+//   $code =  $value->getAttributeCode();
+//    if($val == "1")
+//        echo $code . "->". $val ;
+// } 
+?>
+
+<?php
+
+$show=0; //show Aditional Columns
+
+?>
+<script src="/js/dropdown/jquery.min.js"></script>
+<script src="/js/dropdown/jquery.ddslick.min.js"></script>
+<script src="/js/dropdown/script.js"></script>
+
+<?php //echo var_dump($att->getData()) ?>
+<?php //endforeach ?>
+<?php //if (count($this->getItemCollection()->getItems())): ?>
+    <div class="box-collateral box-up-sell">
+                <?php //Use this tamplate for all products ?>
+                <h4><?php echo $this->__('Elegir cantidad del producto deseado') ?> </h4>
+                <h4>    
+                    <?php $idAttributeSet = $_product->getAttributeSetId()?>
+                    <?php $cats = $_product->getCategoryIds(); ?>
+                    <?php foreach($cats as $cat): ?>
+                    <?php $category = Mage::getModel('catalog/category')->load($cat); ?>
+                    <?php if($category->getChildren()): ?>
+                    <?php  $nameCategory=$category->getName(); $nameCategory=strtolower($nameCategory);?>
+                    <?php endif; ?>
+                    <?php endforeach;?>
+                    <?php if($_prod->getFichaTecnica()!=''): ?>
+                        <a href="<?php echo $_prod->getFichaTecnica(); ?>"><?php echo $this->__('Download technical sheet'); ?></a>
+                    <?php endif; ?>
+                    <?php if($_prod->getManual()): ?>
+                        <a href="<?php echo $_prod->getManual(); ?>"><?php echo $this->__('Download Manual'); ?></a>
+                    <?php endif; ?>
+                        <?php if($_prod->getHojaDeSeguridad()): ?>
+                        <a href="<?php echo $_prod->getHojaDeSeguridad(); ?>"><?php echo $this->__('Download Security Sheet'); ?></a>
+                    <?php endif; ?>
+                    <?php if($_prod->getCertificadoDeAnalisis()): ?>
+                        <a href="<?php echo $_prod->getCertificadoDeAnalisis(); ?>"><?php echo $this->__('Download Certificate of Analysis'); ?></a>
+                    <?php endif; ?>
+               </h4>
+                <table  id="upsell-product-table_">
+                        <?php foreach ($atributos as $value) :
+                           $val =  $value->getFrontend()->getValue($_prod);            
+                           $code =  $value->getAttributeCode();
+                        
+                        ?>
+                            <?php if($val == "1"|| $val==1): ?>
+                                <?php $attrib[$numAttrib]=$code;?>
+                                <th><?php echo $value->getFrontendLabel() //$attributesCollection->setAttributeGroupFilter(147); //147 avantor; //echo $code . "->". $val ;?></th>
+                            <?php endif; ?>
+                            <?php $numAttrib++; ?>   
+                        <?php endforeach;?>
+                        <!--<th>SKU</th>-->  
+                        <?php //check if product has attributes ?>        
+                        <?php if(count($_prod->getUpsellProducts())>0): ?>        
+                        <th>Precio</th>        
+                        <th>Cant.</th>
+                        <?php endif; ?>
+                        
+                        
+                        <?php if($hemogardDisplay&&$hemogard): ?>
+                        <th class="td-color-tp">Tapón<br />hemogard</th>
+                        <?php endif; ?>
+                        <?php if($convensionalDisplay&&$convencional): ?>
+                        <th class="td-color-tp">Convencional</th>
+                        <?php endif; ?>
+                        <?php if($colorDisplay&&$color || $texturaDisplay&&$textura): ?>
+                        <th class="td-color-color">Color</th>
+                        <?php endif; ?>
+                    <tbody class="content-table">
+                    <?php $this->resetItemsIterator() ?>
+                    <?php $x = 0; ?>
+                    <?php $pId = $_prod->getId();?>
+                    <?php $upsells = $_prod->getUpsellProducts();?>
+                    <?php foreach($upsells as $upsell): ?>
+
+                            <?php $id = $upsell->getData('entity_id') ?>
+                            <?php $_product = Mage::getModel('catalog/product')->load($id) ?>
+                            <?php $limitDropDownXRel=$_product->getLimiteCantidad();?>
+                            <?php $qtyStock->loadByProduct($_product)->getQty(); ?>
+                            <tr class="product-row<?php if($qtyStock->getQty() < 1 || !$_product->isSaleable()): ?> product-row-out-stock<?php endif;?>" p_id="<?php echo $id ?>" qty="<?php echo $qtyStock->getData('qty') ?>" valign="middle">
+                                <?php foreach ($attrib as $codigo): //var_dump($_product);?>
+                                    <?php if($codigo == 'precio_por_unidad'): ?>
+                                    <td>
+                                        <?php echo Mage::helper('core')->currency($_product->getData($codigo), true, false); ?>
+                                    </td>
+                                    <?php else:?>
+                                    <td>
+                                        <?php echo $_product->getData($codigo); ?>
+                                    </td>
+                                <?php endif;?>
+                                    
+                                <?php endforeach; ?>
+                                <!--<td>
+                                    <?php //echo $_product->getSku() ?>
+                                </td>-->         
+                                <td class="price">
+                                    <?php if($_product->getSpecialPrice()){$clasecss='class="price-special-found"';}else{$clasecss='class="price-row"';}?>
+                                    <div <?php echo $clasecss; ?>><?php echo '$'.money_format('%i', $_product->getPrice());?></div>
+                                    <div class="special-price-row"><?php if($_product->getSpecialPrice()):{echo '$'.money_format('%i',$_product->getSpecialPrice());};endif;?></div>
+                                </td>        
+                                <td class="<?php if($qtyStock->getQty() > 1 && $_product->isSaleable()): ?>td-color<?php else:?>product-out-stock<?php endif;?>" align="right">
+                                    <?php if($qtyStock->getQty() < 1 || !$_product->isSaleable()): ?><span style="visibility: visible;">Agotado</span> <?php endif;?>
+                                    <select class ="stock" name="qty" id="qty<?php echo $x; ?>" <?php if($qtyStock->getQty() < 1 || !$_product->isSaleable()): ?> style="visibility: hidden;" <?php endif;?>>
+                                        <?php if($qtyStock->getQty() > 0 && $_product->isSaleable()): ?>
+                                            <?php for ($i = 0; $i <= $qtyStock->getQty(); $i++): ?>
+                                                <?php $qty_=$qtyStock->getQty();?>
+                                                <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
+                                                <?php if($i >= $limitDropDownXRel){break;}?>
+                                            <?php endfor; ?>
+                                            <?php //for ($i = 0; $i <= $qtyStock->getData('qty'); $i++): ?>
+                                                <!--<option value="<?php //echo $i; ?>"><?php //echo $i; ?></option>-->
+                                            <?php //endfor; ?>
+                                        <?php else: ?>
+                                            <option value="0">Agotado</option>
+                                        <?php endif; ?>
+                                    </select>
+                                    <input type="hidden" name="pricerice" class="price-product" id="prc<?php echo $x; ?>" value="<?php echo $_product->getPrice(); ?>" />
+                                    <input type="hidden" name="specialPrice" class="special-price" id="sprc<?php echo $x; ?>" value="<?php if($_product->getSpecialPrice()):{echo $_product->getSpecialPrice();};endif; ?>" /> 
+                                </td>
+                                <?php if($hemogard): ?>
+                                <td class="td-color-tp">
+                                    <!-- 
+                                    <?php //$params = $this->getParsmValue('hemogard'); ?>
+                                    <?php //foreach ($params as $param): ?>
+                                        <?php //if($param['label'] == $hemogard): ?>
+                                            <img src="<?php //echo Mage::getBaseUrl().'media/catalog/attributes/'.$param['value'] ?>.png">
+                                        <?php //endif; ?>
+                                    <?php //endforeach; ?>
+                                    -->
+                                    <?php if($_product->getData('hemogard')): ?>
+                                        <img src="<?php echo Mage::getBaseUrl().'media/catalog/attributes/'.$_product->getData('hemogard') ?>.png">
+                                    <?php endif; ?>
+
+                                </td>
+                                <?php endif; ?>
+                                
+                                <?php if($convencional): ?>
+                                <td class="td-color-tp">
+                                    <!-- 
+                                    <?php //$params = $this->getParsmValue('convencional'); ?>
+                                    <?php //foreach ($params as $param): ?>
+                                        <?php //if($param['label'] == $convencional): ?>
+                                            
+                                        <?php //endif; ?>
+                                    <?php //endforeach; ?>
+                                     -->
+                                    <?php if($_product->getData('convencional')): ?>
+                                        <img src="<?php echo Mage::getBaseUrl().'media/catalog/attributes/'.$_product->getData('convencional') ?>.png" />
+                                    <?php endif; ?>
+
+                                     
+
+                                </td>
+                                <?php endif; ?>
+                                <?php if($colorDisplay || $texturaDisplay): ?>
+                                
+                                              <?php if($_product->getData('color')): ?>
+                                 <td class="td-color-color" style="background-color:<?php echo '#'.substr($_product->getAttributeText('color'),0,6); ?>" >
+                                    
+                                             <?php else: ?>
+                                        <td class="td-color-color" style="background-image:url(<?php echo Mage::getBaseUrl().'media/catalog/attributes/'.$_product->getData('textura'); ?>)" >
+                                      
+                                     
+                                     <?php endif; ?>
+         
+ 
+                                <?php endif; ?>
+                                <!--
+                                <td class="td-color-tp">
+                                    <?php //$params = $this->getParsmValue('convencional'); ?>
+                                    <select name="hemogard<?php //echo $x; ?>" id="tapon-htmlselect-hemogard<?php //echo $x; ?>">
+                                        <option value="0">Selección de color</option>
+                                        <?php //foreach ($params as $param): ?>
+                                            <?php //if($param['label'] == $hemogard): ?>
+                                                <option data-imagesrc="<?php //echo Mage::getBaseUrl().'media/catalog/attributes/'.$param['value'] ?>.png" value="<?php //echo $param['value']; ?>" Selected><?php //echo $param['label']; ?></option>
+                                            <?php //else: ?>
+                                                <option data-imagesrc="<?php //echo Mage::getBaseUrl().'media/catalog/attributes/'.$param['value'] ?>.png" value="<?php //echo $param['value']; ?>"><?php //echo $param['label']; ?></option>
+                                            <?php //endif; ?>
+                                        <?php //endforeach; ?>
+                                        </select>
+                                </td>
+                                <td class="td-color-tp">
+                                    <?php //$params = $this->getParsmValue('convencional'); ?>
+                                    <select name="convencional<?php //echo $x; ?>" id="tapon-htmlselect-convencional<?php //echo $x; ?>">
+                                        <option value="0">Selección de color</option>
+                                        <?php //foreach ($params as $param): ?>
+                                            <?php //if($param['label'] == $convencional): ?>
+                                                <option data-imagesrc="<?php //echo Mage::getBaseUrl().'media/catalog/attributes/'.$param['value'] ?>.png" value="<?php //echo $param['value']; ?>" Selected><?php //echo $param['label']; ?></option>
+                                            <?php //else: ?>
+                                                <option data-imagesrc="<?php //echo Mage::getBaseUrl().'media/catalog/attributes/'.$param['value'] ?>.png" value="<?php //echo $param['value']; ?>"><?php //echo $param['label']; ?></option>
+                                            <?php //endif; ?>
+                                        <?php //endforeach; ?>
+                                        </select>
+                                </td>
+                                -->
+                            </tr>
+                        <?php $x++ ?>
+                <?php  endforeach; ?>
+                        </tbody>
+                </table><br> 
+    </div>
+
+

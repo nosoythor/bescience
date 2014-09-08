@@ -1,0 +1,304 @@
+<?php
+/**
+ * Magento
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@magentocommerce.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magentocommerce.com for more information.
+ *
+ * @category    design
+ * @package     base_default
+ * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ */
+?>
+<?php
+/**
+ * Product list template
+ *
+ * @see Mage_Catalog_Block_Product_List
+ */
+?>
+<?php
+
+$_productCollection = $this->getLoadedProductCollection();
+$_helper = $this->helper('catalog/output');
+$category_show=false;
+$currency = 0;
+$currency = (float)Mage::getStoreConfig('uscurrency/setings/exchangerate');
+?>
+<?php if (!$_productCollection->count()): ?>
+    <p class="note-msg"><?php echo $this->__('There are no products matching the selection.') ?></p>
+<?php else: ?>
+    <div class="category-products">
+        <?php echo $this->getToolbarHtml() ?>
+        <?php // List mode ?>
+        <?php if ($this->getMode() != 'grid'): ?>
+            <?php $_iterator = 0; ?>
+            <ol class="products-list" id="products-list">
+                <?php $att = Mage::getmodel('catalog/product'); ?>
+                <?php $prod = Mage::getmodel('catalog/product'); ?>
+                <?php foreach ($_productCollection as $_product): ?>
+                    <li class="item<?php if (++$_iterator == sizeof($_productCollection)): ?> last<?php endif; ?> itemBeScienceList">
+                        <?php $createdDate = $_product->getCreatedAt(); ?>
+                        <?php $todayDate = Mage::app()->getLocale()->date()->toString(Varien_Date::DATETIME_INTERNAL_FORMAT); ?>
+                        <?php $datetime1 = new DateTime($createdDate);
+                        $datetime2 = new DateTime($todayDate);
+                        $timeLapse = $datetime1->diff($datetime2); ?>
+                        <?php $noDaysCreated = $timeLapse->format('%a'); ?>
+                        <?php if ($noDaysCreated <= 30): ?>
+                            <span class="itemNewList" ><?php echo "nuevo"; ?></span>
+                        <?php endif; ?>
+                        <?php if ($_product->getSpecialPrice()): ?>
+                            <span class="itemSpecialPriceList"><?php echo "rebaja"; ?></span>
+                        <?php endif; ?>
+                        <?php //if($_product->getCertificado()==1):?>
+                            <!--<span class="itemCertificadoList"><?php //echo "certificado"; ?></span>-->
+                        <?php //endif;?>
+                         <span class="imageBeScienceList">        
+                         <a href="<?php echo $_product->getProductUrl() ?>" title="<?php echo $this->stripTags($this->getImageLabel($_product, 'small_image'), null, true) ?>" class="product-image"><img src="<?php echo $this->helper('catalog/image')->init($_product, 'small_image')->resize(135); ?>" width="135" height="135" alt="<?php echo $this->stripTags($this->getImageLabel($_product, 'small_image'), null, true) ?>" /></a>
+                         </span>       
+                            <?php // Product description  ?>
+                        <span class="textsBeScienceList">    
+                        
+                                <span class="titleBeScienceList">
+                                <?php $_productNameStripped = $this->stripTags($_product->getName(), null, true); ?>
+                                <h2 class="product-name"><a href="<?php echo $_product->getProductUrl() ?>" title="<?php echo $_productNameStripped; ?>"><?php echo $_helper->productAttribute($_product, $_product->getName(), 'name'); ?></a></h2>
+                                </span>
+                                 <div class="rating-BeScience-Box-List">   
+                                <?php
+                                    unset($ratings);
+                                    $_reviews = Mage::getModel('review/review')->getResourceCollection();
+                                    $_reviews->addStoreFilter(Mage::app()->getStore()->getId())
+                                            ->addEntityFilter('product', $_product->getId())
+                                            ->addStatusFilter(Mage_Review_Model_Review::STATUS_APPROVED)
+                                            ->setDateOrder()
+                                            ->addRateVotes();
+                                    $avg = 0;
+                                ?>
+
+                              <?php foreach ($_reviews->getItems() as $_review): ?>
+                                    <?php $reviewcount++; ?>
+                                    <?php foreach ($_review->getRatingVotes() as $_vote): ?>
+                                        <?php $ratings[] = $_vote->getPercent(); ?>                                    
+                                        <?php endforeach; ?>
+                              <?php endforeach; ?>
+                                    <?php if (array_sum($ratings) != 0): ?>
+                                  
+                                        <?php $avg = array_sum($ratings) / count($ratings); ?> 
+                                        <div class="rating-box">  
+                                            <div class="rating" style="width: <?php echo ceil($avg); ?>%;"></div>
+                                        </div>
+                                        <?php $avg=0; ?>
+                                    <?php else: ?>
+
+                                    <?php $avg = 0; ?> 
+                                    <div class="rating-box">  
+                                        <div class="rating" style="width: <?php echo ceil($avg); ?>%;"></div>
+                                    </div>
+                                <?php endif; ?>
+                                 <span class='opionionNoBeScienceList'><?php echo ($reviewcount) ?><?php if($reviewcount > 0): ?> comentarios<?php endif;?></span>
+                            </div>     
+                                       
+                                <span class="priceBoxBeScience" >
+                               <?php //echo $this->getPriceHtml($_product, true) ?>
+
+                               <?php $formatPrice=explode(".",$_product->getPrice()); ?>
+                               <?php if ($_product->getSpecialPrice()): ?>
+                               <?php $formatPriceSpecial=explode(".",$_product->getSpecialPrice()); ?>
+                               <span class="alineationBeSciencelist" > <?php echo '$'.$formatPrice[0].'.<sup>'.substr($formatPrice[1],0,-2).'</sup>'; ?></span>
+                              <?php endif; ?>
+                               <span class="alineationBeSciencelist" ><?php echo $this->__('from') ?>??</span>
+                               <?php $formatPrice=explode(".",$_product->getPrice()); ?>
+                               <span class="priceBeScience alineationBeSciencelist"><?php echo '$'.$formatPrice[0].'.<sup>'.substr($formatPrice[1],0,-2).'</sup>'; ?></span>
+                               
+                               
+                               <span class="priceBeScience alineationBeSciencelist">
+                                   <?php if ($_product->getSpecialPrice()): ?>
+                                   <?php echo '$'.$formatPriceSpecial[0].'.<sup>'.substr($formatPriceSpecial[1],0,-2).'</sup>'; ?>
+                                   <?php else: ?>
+                                   <?php echo '$'.$formatPrice[0].'.<sup>'.substr($formatPrice[1],0,-2).'</sup>'; ?>
+                                   <?php endif; ?>
+                               </span>
+                               </span>
+                                <div class="actions-BeScienceList">
+                                
+                                <?php if ($_product->isSaleable()): ?>
+                                    <p><button type="button" title="<?php echo $this->__('Details') ?>" class="button btn-cart" onclick="setLocation('<?php echo $_product->getProductUrl() ?>')"><span><span><?php echo $this->__('Details') ?></span></span></button></p>
+                                    
+                                <?php else: ?>
+                         
+                                    <p class="availability out-of-stock"><span><?php echo $this->__('Out of stock') ?></span></p>
+                                    <?php endif; ?>
+                                <span class="imageTradeList" ><a href="<?php echo $this->getBaseUrl().str_replace(" ","-",strtolower(trim($att->load($_product->getId())->getAttributeText('marca')))).".html"; ?>"><img class="imageTradeBeScience" src="<?php echo $this->getBaseUrl()."media/marcas/". $att->load($_product->getId())->getAttributeText('marca'); ?>.gif" /></a></span> 
+                                <div class="desc std">
+            <?php echo $_helper->productAttribute($_product, $_product->getShortDescription(), 'short_description') ?>
+                                    <a href="<?php echo $_product->getProductUrl() ?>" title="<?php echo $_productNameStripped ?>" class="link-learn"><?php echo $this->__('Learn More') ?></a>
+                                </div>
+                                </div>
+                            </span>
+                    </li>
+        <?php endforeach; ?>
+            </ol>
+            <script type="text/javascript">decorateList('products-list', 'none-recursive')</script>
+
+        <?php else: ?>
+
+            <?php // Grid Mode ?>
+
+            <?php $_collectionSize = $_productCollection->count() ?>
+            <?php $_columnCount = $this->getColumnCount(); ?>
+                <?php $i = 0;
+               
+                $att = Mage::getModel('catalog/product');
+                foreach ($_productCollection as $_product): ?>
+                        <?php  $productInDollars = $this->getDollares($_product); ?>
+                        <?php if($productInDollars==true){
+                              $category_show= true;
+                        } ?> 
+                    
+                        <?php $att->load($_product->getId())->getAttributeText('marca'); ?>
+                        <?php //echo "<pre>";var_dump(Mage::getModel('catalog/product')->load($_product->getProductId())->getAttributeText('marca') ); ?>
+                        <?php if ($i++ % $_columnCount == 0): ?>
+                    <ul class="products-grid">
+                        <?php endif ?>
+                    <li class="item<?php if (($i - 1) % $_columnCount == 0): ?> first<?php elseif ($i % $_columnCount == 0): ?> last<?php endif; ?> ">
+                        <?php $tiempoDeEntrega = Mage::getModel('catalog/product')->load($_product->getId())->getTiempoDeEntrega(); ?>
+                        <div class="tiempo_<?php echo $tiempoDeEntrega; ?>"></div>
+                        <?php $createdDate = $_product->getCreatedAt(); ?>
+                        <?php $todayDate = Mage::app()->getLocale()->date()->toString(Varien_Date::DATETIME_INTERNAL_FORMAT); ?>
+                        <?php $datetime1 = new DateTime($createdDate);
+                        $datetime2 = new DateTime($todayDate);
+                        $timeLapse = $datetime1->diff($datetime2); ?>
+                        <?php $noDaysCreated = $timeLapse->format('%a'); ?>
+
+                        <div class="titleBeScience"> 
+                        <a href="<?php echo $_product->getProductUrl() ?>" title="<?php echo $this->stripTags($this->getImageLabel($_product, 'small_image'), null, true) ?>" class="product-image"><span class="BeScienceImages" ><img  class="BeScienceImageProduct" src="<?php echo $this->helper('catalog/image')->init($_product, 'small_image')->resize(230); ?>" width="228" height="230" alt="<?php echo $this->stripTags($this->getImageLabel($_product, 'small_image'), null, true) ?>" >
+                        <?php if ($noDaysCreated <= 30): ?>
+                                <div class="itemNew" ><?php Mage::helper('core')->__('new') ?></div>
+                        <?php else: ?>
+                            <?php if ($_product->getSpecialPrice()): ?>
+                                <span class="itemSpecialPrice"><?php echo Mage::helper('core')->__('discount'); ?></span>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                        <?php //if($att->getCertificado()==1):?>
+                            <!--<span class="itemCertificado"><?php //echo "certificado"; ?></span>-->
+                        <?php //endif;?>
+                        </a>        
+                        </div>
+                        
+                        <h2 class="product-name alineationBeScience"><a  href="<?php echo $_product->getProductUrl() ?>" title="<?php echo $this->stripTags($_product->getName(), null, true) ?>"><?php echo $_helper->productAttribute($_product, $_product->getName(), 'name') ?></a></h2>
+                        <h1 ><a><?php $_product->getDescription(); ?></a></h1>
+         
+                        </span>
+                            <div class="rating-BeScience-Box" style="float:left;height:30px;">    
+                                <?php
+                                 unset($ratings);
+                                $_reviews = Mage::getModel('review/review')->getResourceCollection();
+                                $_reviews->addStoreFilter(Mage::app()->getStore()->getId())
+                                        ->addEntityFilter('product', $_product->getId())
+                                        ->addStatusFilter(Mage_Review_Model_Review::STATUS_APPROVED)
+                                        ->setDateOrder()
+                                        ->addRateVotes();
+
+                                $avg = 0;
+                                ?>
+                                <?php $reviewcount=0; ?>
+                                <?php foreach ($_reviews->getItems() as $_review): ?>
+                                    <?php $reviewcount++; ?>
+                                    <?php foreach ($_review->getRatingVotes() as $_vote): ?>
+                                        <?php $ratings[] = $_vote->getPercent(); ?>                                    
+                                        <?php endforeach; ?>
+                                <?php endforeach; ?>
+                                <?php if (isset($ratings) && array_sum($ratings) != 0): ?>
+
+                                <?php $avg = array_sum($ratings) / count($ratings); ?> 
+                                    <div class="rating-box">  
+                                        <div class="rating" style="width: <?php echo ceil($avg); ?>%;"></div>
+                                    </div>
+                                <?php $avg=0; ?>
+                                <?php else: ?>
+
+                                    <?php $avg = 0; ?> 
+                                    <div class="rating-box">  
+                                        <div class="rating" style="width: <?php echo ceil($avg); ?>%;"></div>
+                                    </div>
+                                <?php endif; ?>
+                                 <span class='opionionNoBeScienceList'><?php echo ($reviewcount) ?><?php if($reviewcount > 0): ?> comentarios<?php else: ?> comentarios<?php endif;?></span>
+                            </div>        
+                               
+                       
+                            <?php $reviewcount=0; ?>
+                            <?php if($category_show): ?>
+                                <span class="priceBoxBeScience" style='float:left;height:20px'>
+                                      <?php $formatPrice=explode(".",$_product->getPrice()); ?>
+                                   <?php if(strtolower(trim($att->load($_product->getId())->getAttributeText('marca')))=='megalab'): ?>    
+                                   <span class="alineationBeScience box-from" ><?php echo $this->__('Box from'); ?></span>
+                                   <?php else: ?>
+                                   <span class="alineationBeScience" ><?php echo $this->__('from'); ?></span>
+                                   <?php endif ?>
+                                   <?php if ($_product->getSpecialPrice()): ?>
+                                   <?php $formatPriceSpecial=explode(".",$_product->getSpecialPrice()); ?>
+                                  <span class="alineationBeScience precioViejo"><?php echo '$'.$formatPrice[0].'.<sup>'.substr($formatPrice[1],0,-2).'</sup><small>US</small>'; ?></span>
+                                  
+                                  <?php endif; ?>
+                                   <?php if($_product->getSpecialPrice()):?>
+                                   <span class="priceBeScience"><?php echo '$'.$formatPriceSpecial[0].'.<sup>'.substr($formatPriceSpecial[1],0,-2).'</sup><small>US</small>'; ?></span>
+                                  <?php else: ?>
+                                   <span class="priceBeScience"><?php echo '$'.$formatPrice[0].'.<sup>'.substr($formatPrice[1],0,-2).'</sup><small>US</small>'; ?></span>
+                                   <?php endif; ?>
+                               </span>
+                               <?php else: ?>
+                                    <span class="priceBoxBeScience" style='float:left;height:20px'>
+                                      <?php $formatPrice=explode(".",$_product->getPrice()); ?>
+                                   <?php if(strtolower(trim($att->load($_product->getId())->getAttributeText('marca')))=='megalab'): ?>    
+                                   <span class="alineationBeScience box-from" ><?php echo $this->__('Box from'); ?></span>
+                                   <?php else: ?>
+                                   <span class="alineationBeScience" ><?php echo $this->__('from'); ?></span>
+                                   <?php endif ?>
+                                   <?php if ($_product->getSpecialPrice()): ?>
+                                   <?php $formatPriceSpecial=explode(".",$_product->getSpecialPrice()); ?>
+                                  <span class="alineationBeScience precioViejo"><?php echo '$'.$formatPrice[0].'.<sup>'.substr($formatPrice[1],0,-2).'</sup><small>MX</small>'; ?></span>
+                                  
+                                  <?php endif; ?>
+                                   <?php if($_product->getSpecialPrice()):?>
+                                   <span class="priceBeScience"><?php echo '$'.$formatPriceSpecial[0].'.<sup>'.substr($formatPriceSpecial[1],0,-2).'</sup><small>MX</small>'; ?></span>
+                                  <?php else: ?>
+                                   <span class="priceBeScience"><?php echo '$'.$formatPrice[0].'.<sup>'.substr($formatPrice[1],0,-2).'</sup><small>MX</small>'; ?></span>
+                                   <?php endif; ?>
+                               </span>
+                               <?php endif; ?>
+                            <div class="actions-BeScience">
+                                    <span class="imageTrade" ><a href="<?php echo $this->getBaseUrl().str_replace(" ","-",strtolower(trim($att->load($_product->getId())->getAttributeText('marca')))).".html"; ?>"><img class="imageTradeBeScience" src="<?php if($att->load($_product->getId())->getAttributeText('marca')): echo $this->getSkinUrl()."images/marcas/". $att->load($_product->getId())->getAttributeText('marca');else: echo $this->getSkinUrl()."images/marcas/OTRASMARCAS";endif; ?>.png" /></a></span>
+                                    <?php if ($_product->isSaleable()): ?>
+                                    <button type="button" title="<?php echo $this->__('Details') ?>" class="button btn-cart alineationBeScience" onclick="setLocation('<?php echo $_product->getProductUrl() ?>')"><span><span><?php echo $this->__('Details') ?></span></span></button>
+                                    <?php else: ?>
+                                    <p class="availability out-of-stock"><span><?php echo $this->__('Out of stock') ?></span></p>
+                                    <?php endif; ?>
+                     
+                            </div>
+                    </li>
+                <?php if ($i % $_columnCount == 0 || $i == $_collectionSize): ?>
+                    </ul>
+                    <?php endif ?>
+                <?php endforeach ?>
+            <script type="text/javascript">decorateGeneric($$('ul.products-grid'), ['odd','even','first','last'])</script>
+    <?php endif; ?>
+
+        <div class="toolbar-bottom">
+    <?php echo $this->getToolbarHtml() ?>
+        </div>
+    </div>
+<?php endif; ?>
