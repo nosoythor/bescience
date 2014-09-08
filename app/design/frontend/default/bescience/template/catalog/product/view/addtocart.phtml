@@ -41,12 +41,23 @@ if($this->isUpsellTable($_product)){
     $this->_upsellTable = TRUE;
 }
 ?>
-<?php if($_product->isSaleable()): ?>
+<?php if($_product->isSaleable()): 
+    $upSellProduct = Mage::getModel('catalog/product')->load($_product->entity_id);
+
+    $categoryName = '';
+    $categoryIds = $upSellProduct->getCategoryIds();
+
+    if(isset($categoryIds[0])){
+        $categoryName = $categoryIds[0];
+        $categoryName = Mage::getModel('catalog/category')->load($categoryName);
+        $categoryName = $categoryName->getName();
+    }
+?>
     <div class="add-to-cart" align="right">
         <?php if(!$this->_upsellTable): ?>
         <?php if(!$_product->isGrouped()): ?>
         <label for="qty"><?php echo Mage::helper('catalog')->__('Qty:') ?></label>
-        <input type="text" name="qty" id="qty" maxlength="12" value="<?php echo $this->getProductDefaultQty() * 1 ?>" title="<?php echo Mage::helper('catalog')->__('Qty') ?>" class="input-text qty" />
+        <input type="text" name="qty" id="qty" <?php echo 'product="'.$_product->entity_id.'" productname="'.$_product->name.'" price="'.$_product->price.'" category="'.$categoryName.'" brand="'.$_product->getManufacturer('manufacturer').'" variant="'.$_product->getColor().'"'; ?> maxlength="12" value="<?php echo $this->getProductDefaultQty() * 1 ?>" title="<?php echo Mage::helper('catalog')->__('Qty') ?>" class="input-text qty" />
         <?php endif; ?>
             <button type="button" title="<?php echo $buttonTitle ?>" class="button btn-cart" onclick="productAddToCartForm.submit(this)"><span><span><?php echo $buttonTitle ?></span></span></button>
         <?php else: ?>

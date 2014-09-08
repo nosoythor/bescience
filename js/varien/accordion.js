@@ -24,7 +24,7 @@
  */
 Accordion = Class.create();
 Accordion.prototype = {
-    initialize: function(elem, clickableEntity, checkAllow) {
+    initialize: function(elem, clickableEntity, checkAllow, callback) {
         this.container = $(elem);
         this.checkAllow = checkAllow || false;
         this.disallowAccessToNextSections = false;
@@ -34,6 +34,11 @@ Accordion.prototype = {
         headers.each(function(header) {
             Event.observe(header,'click',this.sectionClicked.bindAsEventListener(this));
         }.bind(this));
+        if(typeof callback == 'function'){
+            this.callback = callback;
+        }else{
+            this.callback = function(){};
+        }
     },
 
     sectionClicked: function(event) {
@@ -68,6 +73,8 @@ Accordion.prototype = {
                     }
                 }
             }
+
+            this.callback(section);
         }
     },
 

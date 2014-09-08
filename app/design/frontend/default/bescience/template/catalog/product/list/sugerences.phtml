@@ -36,8 +36,23 @@
         <?php $_iterator = 0; ?>
      <ol class="products-list" id="products-list">
         <?php foreach ($productCollection as $_product): ?>
-            <?php $product = Mage::getModel('Mage_Catalog_Model_Product')->load($_product->getId());?>
-    <li class="item<?php if (++$_iterator == sizeof($productCollection)): ?> last<?php endif; ?> itemBeScienceList">
+            <?php $product = Mage::getModel('Mage_Catalog_Model_Product')->load($_product->getId());
+              $productInfo = '';
+
+              $upSellProduct = Mage::getModel('catalog/product')->load($_product->entity_id);
+
+              $categoryName = '';
+              $categoryIds = $upSellProduct->getCategoryIds();
+
+              if(isset($categoryIds[0])){
+                  $categoryName = $categoryIds[0];
+                  $categoryName = Mage::getModel('catalog/category')->load($categoryName);
+                  $categoryName = $categoryName->getName();
+              }
+
+              $productInfo = 'product="'.$_product->entity_id.'" productname="'.$_product->name.'" price="'.$_product->price.'" category="'.$categoryName.'" brand="'.$_product->getManufacturer('manufacturer').'" variant="'.$_product->getColor().'"';
+            ?>
+    <li class="item<?php if (++$_iterator == sizeof($productCollection)): ?> last<?php endif; ?> itemBeScienceList gtm-products-grid-item" <?php echo $productInfo; ?>>
         <?php $tiempoDeEntrega = $product->getTiempoDeEntrega(); ?>
         <div class="tiempo_<?php echo $tiempoDeEntrega; ?>"></div>
               <?php $createdDate = $_product->getCreatedAt(); ?>

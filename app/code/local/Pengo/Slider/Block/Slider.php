@@ -105,7 +105,7 @@ class Pengo_Slider_Block_Slider extends Mage_Core_Block_Template {
         $path = Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA) . 'slider';
 
         foreach ($this->getGallery($id) as $image) {
-
+            $promotionId = ($image->getId()) ? $image->getId() : '';
             $link = ($image->getImgLink()) ? $image->getImgLink() : '';
             $title = ($image->getImgLabel()) ? $image->getImgLabel() : '';
             $target = ($image->getImgTarget()) ? ' onclick="this.target=\'' . $image->getImgTarget() . '\'"' : '';
@@ -114,7 +114,7 @@ class Pengo_Slider_Block_Slider extends Mage_Core_Block_Template {
                 $html .= '<a href="' . $link . '"' . $target . ' >';
             }
 
-            $html .='<img src="' . $path . $image->getImgName() . '" alt="" title="' . $title . ' "/>';
+            $html .='<img class="gtm-promotion" src="' . $path . $image->getImgName() . '" promotion="'.$promotionId.'" alt="" title="' . $title . ' "/>';
 
             if (!empty($link)) {
                 $html .= '</a>';

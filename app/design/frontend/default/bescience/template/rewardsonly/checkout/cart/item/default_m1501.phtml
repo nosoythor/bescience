@@ -349,5 +349,19 @@ if ($hasRedeemed) {
     <?php endif; ?>
     <?php /* ST REWARDSONLY END */ ?>
     <?php endif; ?>
-    <td class="a-center"><a href="<?php echo $this->getDeleteUrl()?>" title="<?php echo $this->__('Remove item')?>" class="btn-remove btn-remove2"><?php echo $this->__('Remove item')?></a></td>
+    <td class="a-center">
+        <?php 
+            $product = $this->getProduct();
+
+            $categoryName = '';
+            $categoryIds = $product->getCategoryIds();
+
+            if(isset($categoryIds[0])){
+                $categoryName = $categoryIds[0];
+                $categoryName = Mage::getModel('catalog/category')->load($categoryName);
+                $categoryName = $categoryName->getName();
+            }
+            echo '<a href="'.$this->getDeleteUrl().'" title="'.$this->__('Remove item').'" product="'.$product->entity_id.'" category="'.$categoryName.'" brand="'.$product->getManufacturer('manufacturer').'" variant="'.$product->getColor().'" class="btn-remove btn-remove2">'.$this->__('Remove item').'</a>';
+        ?>
+    </td>
 </tr>

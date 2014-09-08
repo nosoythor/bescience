@@ -173,8 +173,23 @@ $currency = (float)Mage::getStoreConfig('uscurrency/setings/exchangerate');
                         <?php //echo "<pre>";var_dump(Mage::getModel('catalog/product')->load($_product->getProductId())->getAttributeText('marca') ); ?>
                         <?php if ($i++ % $_columnCount == 0): ?>
                     <ul class="products-grid">
-                        <?php endif ?>
-                    <li class="item<?php if (($i - 1) % $_columnCount == 0): ?> first<?php elseif ($i % $_columnCount == 0): ?> last<?php endif; ?> ">
+                        <?php endif;
+                            $productInfo = '';
+
+                            $upSellProduct = Mage::getModel('catalog/product')->load($_product->entity_id);
+
+                            $categoryName = '';
+                            $categoryIds = $upSellProduct->getCategoryIds();
+
+                            if(isset($categoryIds[0])){
+                                $categoryName = $categoryIds[0];
+                                $categoryName = Mage::getModel('catalog/category')->load($categoryName);
+                                $categoryName = $categoryName->getName();
+                            }
+
+                            $productInfo = 'product="'.$_product->entity_id.'" productname="'.$_product->name.'" price="'.$_product->price.'" category="'.$categoryName.'" brand="'.$_product->getManufacturer('manufacturer').'" variant="'.$_product->getColor().'"';
+                        ?>
+                    <li class="item<?php if (($i - 1) % $_columnCount == 0): ?> first<?php elseif ($i % $_columnCount == 0): ?> last<?php endif; ?> gtm-products-grid-item" <?php echo $productInfo; ?>>
                         <?php $tiempoDeEntrega = Mage::getModel('catalog/product')->load($_product->getId())->getTiempoDeEntrega(); ?>
                         <div class="tiempo_<?php echo $tiempoDeEntrega; ?>"></div>
                         <?php $createdDate = $_product->getCreatedAt(); ?>

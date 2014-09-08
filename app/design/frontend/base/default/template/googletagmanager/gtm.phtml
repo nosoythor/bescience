@@ -1,20 +1,551 @@
 <?php
-/**
- * Google Tag Manager Template
- *
- * @category    CVM
- * @package     CVM_GoogleTagManager
- * @author      Chris Martin <chris@chris-martin.net>
- * @copyright   Copyright (c) 2013 Chris Martin
- * @license     http://opensource.org/licenses/osl-3.0.php Open Software License 3.0 (OSL-3.0)
- */
-?>
-<!-- Google Tag Manager -->
-<?php
-// Render the data layer.
-echo $this->_getDataLayer();
+	function gtm_get_category_name($product){
+		$categoryName = '';
+		$categoryIds = $product->getCategoryIds();
 
-// Render the container snippet.
-echo $this->_getContainerSnippet();
+		if(isset($categoryIds[0])){
+			$categoryName = $categoryIds[0];
+			$categoryName = Mage::getModel('catalog/category')->load($categoryName);
+			$categoryName = $categoryName->getName();
+		}
+
+		$product = array('name'=>$product->name,'id'=>$product->entity_id,'price'=>$product->price,'category'=>$categoryName,'category'=>$categoryName,'brand'=>$product->getManufacturer('manufacturer'),'variant'=>$product->getColor());
+
+		return $product;
+	}
+
+	$magModule = $this->getRequest()->getModuleName();
+	$magController = $this->getRequest()->getControllerName();
+	$magActionName = $this->getRequest()->getActionName();
+
+	$gtmJSON = array();
+	$gtmType = 0;
+	$gtmIsSearch = '';
+
+	$current_category = Mage::registry('current_category');
+
+	if($magModule == 'checkout' && $magController == 'onepage' && $magActionName == 'success'){
+		$orderId = Mage::getSingleton('checkout/session')->getLastRealOrderId();
+		$order = Mage::getModel('sales/order')->loadByIncrementId($orderId);
+
+		$gtmJSON = array(
+			'actionField'=> array(
+				'id'=> $orderId,
+				'affiliation'=> $order->getPayment()->getMethodInstance()->getTitle(),
+				'revenue'=> $order->base_grand_total,
+				'tax'=> $order->base_tax_amount,
+				'shipping'=> $order->base_shipping_amount,
+				'coupon'=> ''.$order->coupon_code
+			),
+			'products'=> array()
+		);
+
+		$order = $order->getAllItems();
+
+		foreach ($order as $item) {
+			$product = gtm_get_category_name($item->getProduct());
+			$product['quantity'] = $item->getQtyOrdered();
+			$product['quantity'] = intval($product['quantity']);
+			$gtmJSON['products'][] = $product;
+		}
+
+		$gtmType = 4;
+	}else if($magModule == 'checkout' && $magController == 'onepage'){
+		$cart = Mage::getModel('checkout/cart')->getQuote();
+
+		$cart = $cart->getAllItems();
+
+		foreach ($cart as $item) {
+			$product = gtm_get_category_name($item->getProduct());
+			$product['quantity'] = $item->getQty();
+			$gtmJSON[] = $product;
+		}
+
+		$gtmType = 3;
+	}else{
+		$product = Mage::registry('current_product');
+		$productExist = sizeof($product);
+
+		if($productExist > 0){
+			$gtmJSON = gtm_get_category_name($product);
+			$gtmType = 2;
+		}
+	}
 ?>
-<!-- End Google Tag Manager -->
+
+<script type="text/javascript">
+	var gtmJSON = <?php echo json_encode($gtmJSON); ?>;
+	var gtmType = <?php echo $gtmType; ?>;
+	var gtmSiteURL = "<?php echo Mage::getUrl('index.html'); ?>";
+	var carritoQty0 = {length:0};
+	//var sendListBusquedaTimer;
+	var gtmIsHome = <?php echo ($magModule == 'cms' && $magController == 'index') ? 'true' : 'false'; ?>;
+	var gtmIsSearch = <?php echo ($magModule == 'catalogsearch') ? 'true' : 'false'; ?>;
+	var gtmDebug = 0;
+
+	gtmSiteURL = gtmSiteURL.replace('index.html/','');
+
+	//SE PUEDE BORRAR EL SIGUIENTE CODIGO, PERO ANTES CORREGIR EL ERROR DE UNA VARIABLE LLAMADA MENU, SI NO SE CORRIGE NO PERMITIRA CARGAR EL GOOGLE TAG MANAGER
+	if(window['Menu'] == undefined){
+		var Menu = {init: function(){console.log('FALTA LA VARIABLE MENU');}};
+	}
+
+	document.addEventListener("DOMContentLoaded", gtm_ready, false)
+
+	function gtm_ready(){
+		var isAccountCreate = location.href.indexOf('customer/account/create');
+		var send = true;
+		var btnCart = jQuery('.btn-cart');
+		var withOnClick = '';
+		var gtmPromotion = jQuery('.gtm-promotion');
+		var element;
+		var listProductsview = jQuery('.gtm-products-grid-item');
+		var j = 0;
+
+		if(gtmType == 2){
+			gtmJSON = {
+				'ecommerce': {
+					'detail':{
+						'products': [gtmJSON]
+					}
+				}
+			}
+		}else if(gtmType == 3){
+			if(window['loginForm'] != undefined){
+				var opcLoginButton;
+				var opcRegistroButton;
+
+				opcLoginButton = jQuery('#checkout-step-login .col-2 button');
+				opcRegistroButton = jQuery('#onepage-guest-register-button');
+
+				loginForm.submit = opcLoginForm_submit;
+
+				opcLoginButton.removeAttr('onclick');
+				opcRegistroButton.removeAttr('onclick');
+				opcLoginButton.off('click').on('click',carritoStesLogin_click);
+				opcRegistroButton.off('click').on('click',carritoStesRegistro_click);
+			}else{
+				window['loginForm'] = undefined;
+			}
+
+			gtmJSON = {
+				'ecommerce': {
+					'currencyCode': 'MXN',
+					'checkout': {
+						'actionField': {'step': 0},
+						'products': gtmJSON
+					}
+				}
+			}
+			send = false;
+		}else if(gtmType == 4){
+			gtmJSON = {
+				'ecommerce': {
+					'currencyCode': 'MXN',
+					'purchase': gtmJSON
+				}
+			}
+		}else{
+			send = false;
+		}
+
+		if(send){	
+			gtmDataLayerPush(gtmJSON);
+		}
+
+		if(isAccountCreate > -1){jQuery('#form-validate').on('submit',accountCreateForm_submit);}
+
+		jQuery('#newsletter-validate-detail').on('submit',newsletterValidateDetail_submit);
+
+		for(var i=0; i<btnCart.length; i++){
+			element = jQuery(btnCart[i]);
+			withOnClick = element.attr('onclick');
+			if(withOnClick != null){
+				element.attr('withonclick','');
+				element.removeAttr('onclick');
+			}
+			element.off('click').on('click',carritoBtnAdd_click);
+		}
+
+		jQuery('.btn-remove').on('click',carritoBtnRemove_click);
+
+		carritoQty0 = jQuery('select[name="qty"], input[name="qty"]');
+
+		if(gtmPromotion.length > 0){
+			var parent;
+			var tagName = '';
+			gtmJSON = [];
+
+			jQuery('#slider').css({'z-index':100});
+
+			for(var i=0; i<gtmPromotion.length; i++){
+				element = jQuery(gtmPromotion[i]);
+				parent = element.parent();
+				tagName = parent.prop('tagName');
+
+				j = i+1;
+
+				element.attr('position',j);
+				element.attr('creative','Home slider');
+
+				parent.off('click').on('click',gtmPromotion_click);
+
+				gtmJSON.push({
+					'id': element.attr('promotion'),
+					'name': gtmPromotionImgName(element),
+					'creative': 'Home slider',
+					'position': 'Posicion '+j
+				});
+			}
+
+			gtmJSON = {
+				'event': 'promoview',
+				'ecommerce': {
+					'promoView': {
+						'promotions': gtmJSON
+					}
+				}
+			}
+
+			gtmDataLayerPush(gtmJSON);
+
+			jQuery('.nivo-prevNav, .nivo-nextNav').on('click',gtmStopPropagation);
+		}
+
+		if(listProductsview.length > 0){
+			var productName = '';
+			var listProductsEvent = (gtmIsSearch) ? 'searchview' : 'productsview';
+			var listProductsList = 'Productos de Categoria';
+			var links;
+
+
+			if(gtmIsSearch){
+				listProductsList = 'Busqueda de Productos';
+			}else if(gtmIsHome){
+				listProductsList = 'Productos Sugeridos';
+			}
+
+			j = 0;
+			gtmJSON = [];
+
+			for(var i=0; i<listProductsview.length; i++){
+				element = jQuery(listProductsview[i]);
+				links = element.find('.product-image, .btn-cart');
+
+				links.removeAttr('withonclick');
+				links.off('click').on('click',listProductsview_click);
+
+				element.attr('list',listProductsList);
+
+				j = i+1;
+
+				gtmJSON.push({
+					'id': element.attr('product'),
+					'name': element.attr('productname'),
+					'price': element.attr('price'),
+					'brand': element.attr('brand'),
+					'category': element.attr('category'),
+					'variant': element.attr('variant'),
+					'list': listProductsList,
+					'position': j
+				});
+			}
+
+			gtmJSON = {
+				'ecommerce': {
+					'impressions': gtmJSON
+				}
+			}
+
+			gtmDataLayerPush(gtmJSON);
+		}
+	}
+
+	function accountCreateForm_submit(e){
+		e.preventDefault();
+		var _this = jQuery(this);
+		var gtmJSON = {'event': 'registro', 'visitorType': 'registrado'};
+		gtmFORMS(_this,gtmJSON);
+	}
+
+	function newsletterValidateDetail_submit(e){
+		e.preventDefault();
+		var _this = jQuery(this);
+		var gtmJSON = {'event': 'Suscripción al boletín', 'visitorType': 'Suscrito al boletín'};
+		gtmFORMS(_this,gtmJSON);
+	}
+
+	function gtmFORMS(_this,gtmJSON){
+		var validationItems = _this.find('.validation-failed');
+		if(validationItems.length == 0){
+			gtmDataLayerPush(gtmJSON);
+			_this.off('submit').submit();
+		}
+	}
+
+	function carritoBtnAdd_click(){
+		var gtmJSON = {
+			'event': 'addToCart',
+			'ecommerce': {
+				'currencyCode': 'MXN',
+				'add': {
+					'products': new Array()
+				}
+			}
+		}
+		var i = 0;
+		var quantity = 0;
+		var withonclick = this.getAttribute('withonclick');
+		var _this = this;
+		for(i=0; i<carritoQty0.length; i++){
+			quantity = parseInt(carritoQty0[i].value);
+			if(quantity > 0){
+				gtmJSON.ecommerce.add.products.push({
+					'name': carritoQty0[i].getAttribute('productname'),
+					'id': carritoQty0[i].getAttribute('product'),
+					'price': carritoQty0[i].getAttribute('price'),
+					'category': carritoQty0[i].getAttribute('category'),
+					'brand': carritoQty0[i].getAttribute('brand'),
+					'variant': carritoQty0[i].getAttribute('variant'),
+					'quantity': quantity
+				})
+			}
+		}
+
+		if(withonclick != null){
+			gtmJSON['eventCallback'] = function() {
+				productAddToCartForm.submit(_this);
+			}
+		}
+
+		if(gtmJSON.ecommerce.add.products.length > 0){
+			gtmDataLayerPush(gtmJSON);
+		}
+	}
+
+	function carritoBtnRemove_click(e){
+		e.preventDefault();
+		var _this = jQuery(this);
+		var parent = _this.parents('tr');
+		var name = parent.find('.product-name').text();
+		var precio = parent.find('.cart-price:eq(0) .price').text();
+		var quantity = parent.find('input.qty').val();
+		var gtmJSON;
+
+		name = name.trim();
+		precio = precio.replace('$','');
+		precio = precio.replace(/,/gi,'');
+		precio = precio.trim();
+
+		quantity = parseInt(quantity);
+		if(isNaN(quantity)){quantity = 0;}
+
+		gtmJSON = {
+			'event': 'removeFromCart',
+			'ecommerce': {
+				'currencyCode': 'MXN',
+				'remove': {
+					'products': [{
+						'name': name,
+						'id': _this.attr('product'),
+						'price': precio,
+						'category': _this.attr('category'),
+						'brand': _this.attr('brand'),
+						'variant': _this.attr('variant'),
+						'quantity': quantity
+					}]
+				}
+			},
+			'eventCallback': function(){
+				location.href = _this.attr('href');
+			}
+		}
+
+		gtmDataLayerPush(gtmJSON);
+	}
+
+	function carritoSteps(section){
+		var step = -1;
+
+		if(section.id == 'opc-billing'){
+			step = 0;
+		}if(section.id == 'login'){
+			step = 1;
+		}else if(section.id == 'opc-shipping'){
+			step = 2;
+		}else if(section.id == 'opc-shipping_method'){
+			var shipping = jQuery('input[name="billing[use_for_shipping]"]:checked');
+
+			step = 3;
+			if(shipping.length > 0){
+				shipping = shipping.val();
+				if(shipping == 1){
+					step = 2;
+				}
+			}
+		}else if(section.id == 'opc-payment'){
+			step = 4;
+		}else if(section.id == 'opc-review'){
+			step = 5;
+			jQuery('.btn-checkout').removeAttr('onclick').on('click',carritoStepsEnd_click);
+		}else if(section.id == 'finalizar'){
+			step = 6;
+		}else if(section.id == 'registro'){
+			step = 101;
+		}
+
+		if(gtmJSON.ecommerce != undefined){
+			if(step == 5){
+				var payment = jQuery('input[name="payment[method]"]:checked');
+				payment = (payment.length > 0) ? payment.attr('title') : ''; 
+				gtmJSON.ecommerce.checkout.actionField['option'] = payment;
+			}else{
+				delete gtmJSON.ecommerce.checkout.actionField['option'];
+				delete gtmJSON['eventCallback'];
+				if(step == 1){
+					gtmJSON.ecommerce.checkout.actionField.step = 0;
+					gtmJSON['eventCallback'] = function(){loginForm.form.submit();};
+				}else if(step == 6){
+					gtmJSON['eventCallback'] = function(){review.save();};
+				}else if(step == 101){
+					step = 1;
+					gtmJSON['eventCallback'] = function(){checkout.setMethod();};
+				}
+			}
+
+			if(step > 0 && step != gtmJSON.ecommerce.checkout.actionField.step){
+				gtmJSON['event'] = 'checkout';
+				gtmJSON.ecommerce.checkout.actionField.step = step;
+				gtmDataLayerPush(gtmJSON);
+			}else if(step == gtmJSON.ecommerce.checkout.actionField.step && step == 1){
+				checkout.setMethod();
+			}
+		}
+	}
+
+	function opcLoginForm_submit(){
+		if(loginForm.validator && loginForm.validator.validate()){
+            carritoSteps({'id':'login'});
+        }
+        return false;
+	}
+
+	function carritoStesLogin_click(){
+		if(loginForm.validator && loginForm.validator.validate()){
+            this.disabled = true;
+            carritoSteps({'id':'login'});
+        }
+	}
+
+	function carritoStesRegistro_click(){
+		if ($('login:guest') && $('login:guest').checked) {
+            carritoSteps({'id':'registro'});
+        }else if($('login:register') && ($('login:register').checked || $('login:register').type == 'hidden')) {
+            carritoSteps({'id':'registro'});
+        }else{
+        	checkout.setMethod();
+        }
+	}
+
+	function carritoStepsEnd_click(){
+		carritoSteps({'id':'finalizar'})
+	}
+
+	function gtmPromotion_click(e){
+		if(this.tagName == 'A'){e.preventDefault();}
+		var _this = this;
+		var _jthis = jQuery(this);
+		var img;
+		var gtmJSON = {};
+
+		if(this.tagName == 'A'){
+			img = _jthis.find('img');
+		}else{
+			var position = jQuery(".nivo-controlNav .active").attr('rel');
+			img = _jthis.find('img.gtm-promotion:eq('+position+')');
+		}
+
+		gtmJSON = [{
+			'id': img.attr('promotion'),
+			'name': gtmPromotionImgName(img),
+			'creative': img.attr('creative'),
+			'position': img.attr('position')
+		}];
+
+		gtmJSON[0].position = 'Posicion '+gtmJSON[0].position;
+		gtmJSON = {
+			'event': 'promotionClick',
+			'ecommerce': {
+				'promoClick': {
+					'promotions': gtmJSON
+				}
+			}
+		}
+
+		if(this.tagName == 'A'){
+			gtmJSON['eventCallback'] = function(){
+				location.href = _this.href;
+			}
+		}
+
+		gtmDataLayerPush(gtmJSON);
+	}
+
+	function gtmPromotionImgName(img){
+		var pos = 0;
+		img = img.attr('src');
+		pos = img.lastIndexOf('/');
+		pos++;
+		img = img.substring(pos);
+		return img;
+	}
+
+	function listProductsview_click(e){
+		e.preventDefault();
+		var product = jQuery(this).parents('li');
+		var url = '';
+		var gtmJSON;
+
+		if(this.tagName == 'A'){
+			url = this.getAttribute('href');
+		}else{
+			var _this = product.find('.product-image');
+			url = _this.attr('href');
+		}
+
+		gtmJSON = {
+			'event': 'productClick',
+			'ecommerce': {
+				'click': {
+					'actionField': {'list': product.attr('list')},
+					'products': [{
+						'id': product.attr('product'),
+						'name': product.attr('productname'),
+						'price': product.attr('price'),
+						'brand': product.attr('brand'),
+						'category': product.attr('category'),
+						'variant': product.attr('variant')
+					}]
+				}
+			},
+			'eventCallback': function(){
+				location.href = url;
+			}
+		}
+
+		gtmDataLayerPush(gtmJSON);
+	}
+
+	function gtmStopPropagation(e){
+		e.stopPropagation();
+	}
+
+	function gtmDataLayerPush(gtmJSON){
+		if(gtmDebug == 1){
+			console.log('Enviando gtmJSON');
+			console.log(gtmJSON);
+			alert('Enviando gtmJSON');
+		}
+		dataLayer.push(gtmJSON);
+	}
+</script>

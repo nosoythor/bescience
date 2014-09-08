@@ -212,8 +212,26 @@ $show=0; //show Aditional Columns
                                     <div class="special-price-row"><?php if($_product->getSpecialPrice()):{echo '$'.money_format('%i',$_product->getSpecialPrice());};endif;?></div>
                                 </td>        
                                 <td class="<?php if($qtyStock->getQty() > 1 && $_product->isSaleable()): ?>td-color<?php else:?>product-out-stock<?php endif;?>" align="right">
-                                    <?php if($qtyStock->getQty() < 1 || !$_product->isSaleable()): ?><span style="visibility: visible;">Agotado</span> <?php endif;?>
-                                    <select class ="stock" name="qty" id="qty<?php echo $x; ?>" <?php if($qtyStock->getQty() < 1 || !$_product->isSaleable()): ?> style="visibility: hidden;" <?php endif;?>>
+                                    <?php 
+                                        $upSellProductAttr = '';
+
+                                        if($qtyStock->getQty() < 1 || !$_product->isSaleable()): ?><span style="visibility: visible;">Agotado</span> <?php 
+                                        else:
+                                            $upSellProduct = Mage::getModel('catalog/product')->load($upsell->entity_id);
+
+                                            $categoryName = '';
+                                            $categoryIds = $upSellProduct->getCategoryIds();
+
+                                            if(isset($categoryIds[0])){
+                                                $categoryName = $categoryIds[0];
+                                                $categoryName = Mage::getModel('catalog/category')->load($categoryName);
+                                                $categoryName = $categoryName->getName();
+                                            }
+
+                                            $upSellProductAttr = ' product="'.$upsell->entity_id.'" productname="'.$upSellProduct->name.'" price="'.$upSellProduct->price.'" category="'.$categoryName.'" brand="'.$upSellProduct->getManufacturer('manufacturer').'" variant="'.$upSellProduct->getColor().'"';
+                                        endif;
+                                    ?>
+                                    <select class ="stock" name="qty" id="qty<?php echo $x; ?>" <?php echo $upSellProductAttr; if($qtyStock->getQty() < 1 || !$_product->isSaleable()): ?> style="visibility: hidden;" <?php endif;?>>
                                         <?php if($qtyStock->getQty() > 0 && $_product->isSaleable()): ?>
                                             <?php for ($i = 0; $i <= $qtyStock->getQty(); $i++): ?>
                                                 <?php $qty_=$qtyStock->getQty();?>
